@@ -65,34 +65,104 @@ ztable <- data.frame(".00" = c(.5000, .5398, .5793, .6179, .6554, .6915,
                                .9936, .9952, .9964, .9974, .9981, .9986,
                                .9990, .9993, .9995, .9997, .9998)
                      , row.names = seq(0,3.4,by=.1))
-
-ztest <- function(n,s,xbar,mu,SE,a=.05){
+#ztest for means
+ztest <- function(n,s,xbar,mu,SE=NULL,a=.05){
+  Describe <- "A Z test is used when you know the standard deviation of the population, if you only know the standard deviation of the sample then you use a T test."
+  
+  if(is.null(SE)) {
   Step1 <- c("First find the Standard Error: SE = s/sqrt(n)",
              paste("In this case:",s,"/sqrt(",n,") =", s/sqrt(n)))
-  SE <- s/sqrt(n)
+  SE <- s/sqrt(n)} else{
+               Step1 <- "Becuase the standard error is given we don't have to compute it"
+             }
+  
   Step2 <- c("Now compute the the test statistic: Z=(xbar-mu)/SE",
              paste("Which would be Z=(",xbar,"-",mu,") /",SE,"=",round(((xbar-mu)/SE),2)))
   z = round(((xbar-mu)/SE),2)
+  
   Step3 <- c("Find your Z statistic on the table, using the first 2 digits for the row name and the last digit  for the column name.", 
-             paste("Row:", floor(z*10)/10, "Column:", round((z-(floor(z*10))/10),3)), paste("P(Z)=P(",z,")","=",round(pnorm(z),5)), "***For any Z score above 3.5 use .9999***")
+             paste("Row:", floor(z*10)/10, "Column:", round((z-(floor(z*10))/10),3)), paste("P(Z <",z,")","=",round(pnorm(z),5)), "***For any Z score above 3.5 use .9999***",
+             "the table shows the probability of getting a z score LESS THAN", "use 1-p(z<|Z|) to find a negative z score")
    
-  notequal <- c(">>Testing sample mean is not equal to population mean<<",
+  notequal <- c(">>Testing sample mean is NOT EQUAL to population mean<<",
                 "Null hypothesis(H0): xbar = mu & Alternative hypothesis(HA or H1): xbar != mu",
-                "P-value = 2*(1-P(z))",
-                paste("P-Value=2*(1-",round(pnorm(z),4),") = ",2*(1-round(pnorm(z),5)))) 
-  Decision <- "If the P-value is < the alpha value(default value = .05), then reject the Null Hypothesis"
-  Final <- list("Step 1: Standard Error"=Step1,"Step 2: Z score"=Step2,"Step3: finding z on table"=Step3, "Step4:Decision" = c(notequal,Decision))
+                "P-value = 2*(P(z < -|Z|))",
+                paste("P-Value=2*(",round(pnorm(-abs(z)),4),") = ",2*(round(pnorm(-abs(z)),5))))
+  
+  greater <- c(">>Testing sample mean is GREATER THAN the population mean<<",
+                "Null hypothesis(H0): xbar = mu & Alternative hypothesis(HA or H1): xbar > mu",
+                "P-value = (1-P(z < Z))",
+                paste("P-Value=1-(",round(pnorm(z),4),") = ",1-(round(pnorm(z),5))))
+  
+  less <- c(">>Testing sample mean is LESS THAN the population mean<<",
+                "Null hypothesis(H0): xbar = mu & Alternative hypothesis(HA or H1): xbar < mu",
+                "P-value = P(z < Z)",
+                paste("P-Value = ",(round(pnorm(z),5))))
+  
+  pvalue <- "If the P-value is < the alpha value(default value = .05), then reject the Null Hypothesis"
+  
+  Decision <- list('notequal' = notequal,'greater than' = greater,'less than' = less, 'pvalue' = pvalue)
+  Final <- list(Describe,"Step 1: Standard Error"=Step1,"Step 2: Z score"=Step2,"Step3: finding z on table"=Step3, "Step4:Decision" = Decision)
   Final
 }
 
+#ztest example
+ztest(n = 46,s = 1800,xbar = 13200,mu = 12800)
+ztest(SE = 265.4,xbar = 12800,mu = 13200)
+
+#ttest for means(function is not finished yet, does not run correctly.)
+ttest <- function(n,s,xbar,mu,SE = NULL,a=.05){
+  Describe <- "A T test is used when you dont know the standard deviation of the population, if you do know the poplation standard deviation then use a z test instead."
+  
+  if(is.null(SE)) {Step1 <- c("First find the Standard Error: SE = s/sqrt(n)",
+             paste("In this case:",s,"/sqrt(",n,") =", s/sqrt(n)))
+  SE <- s/sqrt(n)} else {
+    Step1 <- "The standard error is already given so we don't need to compute it."
+  }
+  Step2 <- c("Now compute the the test statistic: T=(xbar-mu)/SE",
+             paste("Which would be T=(",xbar,"-",mu,") /",SE,"=",round(((xbar-mu)/SE),2)))
+  t = round(((xbar-mu)/SE),2)
+  Step3 <- c("Find your T statistic on the t table, using the first 2 digits for the row name and the last digit  for the column name.", 
+             paste("Row:", floor(z*10)/10, "Column:", round((z-(floor(z*10))/10),3)), paste("P(Z <",z,")","=",round(pnorm(z),5)), "***For any Z score above 3.5 use .9999***",
+             "the table shows the probability of getting a z score LESS THAN", "use 1-p(z<|Z|) to find a negative z score")
+  
+  notequal <- c(">>Testing sample mean is NOT EQUAL to population mean<<",
+                "Null hypothesis(H0): xbar = mu & Alternative hypothesis(HA or H1): xbar != mu",
+                "P-value = 2*(P(z < -|Z|))",
+                paste("P-Value=2*(",round(pnorm(-abs(z)),4),") = ",2*(round(pnorm(-abs(z)),5))))
+  
+  greater <- c(">>Testing sample mean is GREATER THAN the population mean<<",
+               "Null hypothesis(H0): xbar = mu & Alternative hypothesis(HA or H1): xbar > mu",
+               "P-value = (1-P(z < Z))",
+               paste("P-Value=1-(",round(pnorm(z),4),") = ",1-(round(pnorm(z),5))))
+  
+  less <- c(">>Testing sample mean is LESS THAN the population mean<<",
+            "Null hypothesis(H0): xbar = mu & Alternative hypothesis(HA or H1): xbar < mu",
+            "P-value = P(z < Z)",
+            paste("P-Value = ",(round(pnorm(z),5))))
+  
+  pvalue <- "If the P-value is < the alpha value(default value = .05), then reject the Null Hypothesis"
+  
+  Decision <- list('notequal' = notequal,'greater than' = greater,'less than' = less, 'pvalue' = pvalue)
+  Final <- list(Describe,"Step 1: Standard Error"=Step1,"Step 2: Z score"=Step2,"Step3: finding z on table"=Step3, "Step4:Decision" = Decision)
+  Final
+}
+
+#ztest example
 ztest(n=46,s=1800,xbar=13200,mu=12800)
 
+  #Standard Error of a dataset
 stdEr <- function(s,n) {
   formula <- "The formula for standard error is: SE = s/sqrt(n)"
   Instance <- paste("In this case", s,"/","sqrt(",n,")","=",s/sqrt(n))
   Final <- c(formula, Instance)
   Final
-  }
+}
+
+#Standard Error example
+stdEr(15,200)
+
+#Confidence Interval function
 confidinv <- function(xbar,s,n,level=.95) {
   formula <- "The formula for a confidence interval is: xbar +/- Z_alpha/2*(s/sqrt(n))"
   Instance <- paste("In this case", xbar, "+/-", "Z_(",(level+(1-level)/2),")","* (",s,"/sqrt(",n,"))")
@@ -107,4 +177,54 @@ confidinv <- function(xbar,s,n,level=.95) {
   final <- list(step1 = s1,step2 = s2,step3 = s3,step4 = s4,step5 = s5,Conclusion = Con)
   final
 }
-confidinv(2,3,100,level=.95)
+
+#Confidence Interval Example
+confidInv(2,3,100,level=.95)
+
+#Mean of a data set function
+meanHelp <- function(x) {
+  s1 <- paste('To find the mean, divide the sum of the data set by the size of the data set: sum(x)/n ')
+  s2 <- paste(sum(x),'/',length(x),'=',sum(x)/length(x))
+  final <- c(s1,s2)
+  final
+}
+
+#Example of Mean Function
+meanHelp(c(1:17,1:5,rep(6,6)))
+
+#Median of a data set function
+medianHelp <- function(x) {
+  s1 <- paste('the median is the number in the middle of the data set when the numbers are arranged in increasing order.')
+  s2 <- 'So first order the data from smallest value to largest value:'
+  s3 <- sort(x)
+  sx <- sort(x)
+  s4 <- paste('now use the formula to find the middle number: n+1/2, where n is the size of the sample.')
+  s5 <- paste('in this case:', length(x),'+ 1 /',2,'=',(length(x)+1)/2)
+  if(length(x)%%2 == 1) {s6 <- paste('The median is the',(length(x)+1)/2,'th value in the data set, which is:',median(sx))}
+  else {s6 <- paste('Because n+1/2 is not a whole number then we take the average of the two numbers it is between:'
+                    ,sx[floor((length(sx)+1)/2)],'+',sx[ceiling((length(sx)+1)/2)],'/',2,'=',median(sx))}
+  final <- list('step1'=s1,'step2'=s2,'sorted data'=s3,'step4'=s4,'step5'=s5,'step6'=s6)
+  final
+}
+
+#Median example
+medianHelp(c(1:15,1:5,rep(1:4,4)))
+
+#Mode of a data set
+modeHelp <- function(x) {
+  s1 <- 'The mode is the number in the dataset that occurs the most. It helps to sort the data first:'
+  s2 <- sort(x)
+  sx <- table(x)
+  ux <- unique(x)
+  if(length(sx[sx == max(sx)]) > 1) {
+    s3 <- paste('The highest count happens in multiple places, therefore there is more than one mode:')
+  } else {
+    s3 <- paste('The number that occurs the most is:',ux[which.max(tabulate(match(x,ux)))])
+  }
+  s4 <- names(sx[sx == max(sx)])
+  final <- list('Step1' = s1,'sorted Data' = s2,'frequency table' = sx,'Step2' = s3,'mode(s):'=s4)
+  final
+}
+
+#example of Mode
+modeHelp(c(1:15,3:5,rep(1:4,4)))
